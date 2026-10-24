@@ -1,0 +1,14 @@
+[
+  {
+    "property": "mod.diatabhover.hide_native",
+    "label": "Hide Firefox's own tab tooltip and preview while this mod is on",
+    "type": "checkbox",
+    "default": true
+  },
+  {
+    "property": "mod.diatabhover.delay",
+    "label": "Hover delay before the card appears (ms)",
+    "type": "string",
+    "default": "450"
+  }
+]

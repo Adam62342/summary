@@ -1,0 +1,19 @@
+{
+  "id": "dia-tab-hover",
+  "name": "Dia Tab Hover",
+  "description": "Dia-style hover card for sidebar tabs: favicon tile, title, domain, and quick actions (back, bookmark, split view, copy link).",
+  "version": "1.0.0",
+  "author": "you",
+  "homepage": "",
+  "readme": "README.md",
+  "preferences": "preferences.json",
+  "style": {
+    "chrome": "dia-tab-hover.css"
+  },
+  "scripts": {
+    "dia-tab-hover.uc.js": {
+      "include": ["chrome://browser/content/browser.xhtml"]
+    }
+  },
+  "tags": ["tabs", "sidebar", "dia"]
+}
