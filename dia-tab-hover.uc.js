@@ -99,6 +99,21 @@
     return uri;
   }
 
+  // The tab to split the hovered tab with: your current tab, or, when you're
+  // hovering the current tab, the one you had open before it (like Zen's own
+  // "Split tabs" menu item). Essentials can't be split yet in Zen.
+  function splitPartner(tab) {
+    if (typeof gZenViewSplitter === "undefined") return null;
+    const usable = t => isEligible(t) && !t.hidden && !t.hasAttribute("zen-essential");
+    if (!usable(tab)) return null;
+    const selected = gBrowser.selectedTab;
+    const partner = tab === selected ? gZenViewSplitter._lastOpenedTab : selected;
+    if (!usable(partner) || partner === tab) return null;
+    // Already side by side: nothing to do.
+    if (tab.splitView && tab.group && tab.group === partner.group) return null;
+    return partner;
+  }
+
   function tabInfo(tab) {
     const uri = tabURI(tab);
     const url = uri?.spec ?? "";
@@ -112,7 +127,7 @@
       host: host.replace(/^www\./, ""),
       url,
       pinned: tab.pinned,
-      canSplit: typeof gZenViewSplitter !== "undefined" && tab !== gBrowser.selectedTab && !tab.pinned,
+      canSplit: !!splitPartner(tab),
     };
   }
 
@@ -237,8 +252,12 @@
   }
 
   function splitWith(tab) {
+    const partner = splitPartner(tab);
+    if (!partner) return;
     try {
-      gZenViewSplitter.splitTabs([gBrowser.selectedTab, tab], "vsep", 1);
+      // Keep your current tab on the left and focused.
+      const pair = partner === gBrowser.selectedTab ? [partner, tab] : [tab, partner];
+      gZenViewSplitter.splitTabs(pair, "vsep", pair.indexOf(gBrowser.selectedTab));
     } catch (e) {
       console.error("Dia Tab Hover: split view failed", e);
     }
