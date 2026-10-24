@@ -1,4 +1,4 @@
-/* Dia Tab Hover — chrome styles */
+/* Dia Tab Hover — chrome styles. No transitions or animations, for speed. */
 
 .dth-root {
   /* Light appearance */
@@ -16,13 +16,7 @@
   width: 228px;
   pointer-events: auto;
   font: menu;
-  opacity: 0;
-  transform: translateX(-4px) scale(0.97);
-  transform-origin: left top;
-  transition:
-    opacity 0.12s ease,
-    transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.15),
-    top 0.12s cubic-bezier(0.25, 0.9, 0.3, 1);
+  contain: layout paint;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,29 +36,19 @@
   display: none;
 }
 
-.dth-root[side="left"] {
-  transform: translateX(4px) scale(0.97);
-  transform-origin: right top;
-}
-
-.dth-root[visible] {
-  opacity: 1;
-  transform: none;
-}
-
 /* ---- Card ---- */
 .dth-card {
   background: var(--dth-surface);
   color: var(--dth-text);
   border: 1px solid var(--dth-border);
   border-radius: 12px;
-  padding: 11px 10px 6px;
-  text-align: center;
+  padding: 11px 8px 6px;
+  text-align: start;
   box-shadow: 0 8px 24px var(--dth-shadow);
 }
 
 .dth-title {
-  padding: 0 4px;
+  padding: 0 6px;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.3;
@@ -77,7 +61,7 @@
 
 .dth-host {
   margin-top: 2px;
-  padding: 0 4px;
+  padding: 0 6px;
   font-size: 11.5px;
   color: var(--dth-muted);
   white-space: nowrap;
@@ -92,8 +76,8 @@
 /* ---- Actions ---- */
 .dth-actions {
   display: flex;
-  justify-content: space-between;
-  margin-top: 9px;
+  gap: 2px;
+  margin-top: 8px;
 }
 
 .dth-btn {
@@ -101,7 +85,7 @@
   border: none;
   margin: 0;
   padding: 0;
-  width: 44px;
+  width: 36px;
   height: 30px;
   border-radius: 8px;
   background: transparent;
@@ -110,7 +94,6 @@
   align-items: center;
   justify-content: center;
   cursor: default;
-  transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
 }
 
 .dth-btn > svg {
@@ -124,10 +107,6 @@
   color: var(--dth-text);
 }
 
-.dth-btn:active {
-  transform: scale(0.92);
-}
-
 .dth-btn[disabled] {
   opacity: 0.35;
   pointer-events: none;
@@ -137,11 +116,11 @@
   color: var(--dth-accent);
 }
 
-/* Filled bookmark when the page is already bookmarked. */
-.dth-root[bookmarked] .dth-btn[data-action="bookmark"] {
+/* Filled pin when the tab is pinned. */
+.dth-root[pinned] .dth-btn[data-action="pin"] {
   color: var(--dth-accent);
 }
 
-.dth-root[bookmarked] .dth-fillable {
+.dth-root[pinned] .dth-btn[data-action="pin"] .dth-fillable {
   fill: currentColor;
 }
