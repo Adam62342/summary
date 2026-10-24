@@ -19,7 +19,6 @@
   const HTML_NS = "http://www.w3.org/1999/xhtml";
   const SVG_NS = "http://www.w3.org/2000/svg";
   const PREF = "mod.diatabhover.";
-  const DEFAULT_ICON = "chrome://global/skin/icons/defaultFavicon.svg";
 
   const pref = (name, def) => {
     try {
@@ -67,8 +66,11 @@
     );
 
   const ICONS = {
-    back: () => icon(["path", { d: "M9 14 4 9l5-5" }], ["path", { d: "M4 9h10.5a5.5 5.5 0 0 1 0 11H11" }]),
-    bookmark: () => icon(["path", { class: "dth-fillable", d: "M6.5 3.5h11v17L12 16.5l-5.5 4z" }]),
+    pin: () =>
+      icon(
+        ["path", { class: "dth-fillable", d: "M9 4h6l-1 6 3.5 3.5h-11L10 10z" }],
+        ["path", { d: "M12 13.5V20" }]
+      ),
     split: () =>
       icon(["rect", { x: "3", y: "4.5", width: "18", height: "15", rx: "3" }], ["path", { d: "M12 4.5v15" }]),
     copy: () =>
@@ -109,8 +111,7 @@
       title: tab.label || url,
       host: host.replace(/^www\./, ""),
       url,
-      icon: tab.getAttribute("image") || DEFAULT_ICON,
-      canGoBack: !!tab.linkedBrowser?.canGoBack,
+      pinned: tab.pinned,
       canSplit: typeof gZenViewSplitter !== "undefined" && tab !== gBrowser.selectedTab && !tab.pinned,
     };
   }
@@ -139,8 +140,7 @@
       return b;
     };
     btns = {
-      back: button("back", "Go back", goBack),
-      bookmark: button("bookmark", "Bookmark", toggleBookmark),
+      pin: button("pin", "Pin tab", togglePin),
       split: button("split", "Open in split view", splitWith),
       copy: button("copy", "Copy link", copyLink),
     };
@@ -169,12 +169,12 @@
     titleEl.textContent = info.title;
     hostEl.textContent = info.host;
     hostEl.hidden = !info.host;
-    btns.back.toggleAttribute("disabled", !info.canGoBack);
     btns.split.toggleAttribute("disabled", !info.canSplit);
     btns.copy.toggleAttribute("disabled", !info.url);
-    btns.bookmark.toggleAttribute("disabled", !info.url);
-    root.toggleAttribute("bookmarked", false);
-    refreshBookmark(tab, info.url);
+    root.toggleAttribute("pinned", info.pinned);
+    const pinLabel = info.pinned ? "Unpin tab" : "Pin tab";
+    btns.pin.title = pinLabel;
+    btns.pin.setAttribute("aria-label", pinLabel);
   }
 
   // Like Dia: the card hangs just off the tab's outer edge, its top a little
@@ -200,16 +200,10 @@
   function show(tab) {
     clearTimeout(hideTimer);
     if (!root) build();
-    const switching = current && current !== tab && !root.hidden;
     current = tab;
     render(tab);
     root.hidden = false;
     position(tab);
-    if (!switching) {
-      root.removeAttribute("visible");
-      // Next frame so the entrance transition runs.
-      requestAnimationFrame(() => root?.setAttribute("visible", "true"));
-    }
   }
 
   function hide() {
@@ -220,7 +214,6 @@
     current = null;
     overCard = false;
     lastHiddenAt = performance.now();
-    root.removeAttribute("visible");
     root.hidden = true;
   }
 
@@ -232,38 +225,15 @@
   }
 
   // ---- Actions ------------------------------------------------------------
-  function goBack(tab) {
-    tab.linkedBrowser?.goBack();
-    // canGoBack updates asynchronously.
-    setTimeout(() => current === tab && render(tab), 250);
-  }
-
-  async function refreshBookmark(tab, url) {
-    if (!url) return;
+  // The tab moves in the sidebar, so hide rather than leave the card behind.
+  function togglePin(tab) {
     try {
-      const bm = await PlacesUtils.bookmarks.fetch({ url });
-      if (current === tab) root.toggleAttribute("bookmarked", !!bm);
-    } catch (e) {}
-  }
-
-  async function toggleBookmark(tab) {
-    const { url, title } = tabInfo(tab);
-    if (!url) return;
-    try {
-      const bm = await PlacesUtils.bookmarks.fetch({ url });
-      if (bm) {
-        await PlacesUtils.bookmarks.remove(bm.guid);
-      } else {
-        await PlacesUtils.bookmarks.insert({
-          parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-          url,
-          title,
-        });
-      }
-      if (current === tab) refreshBookmark(tab, url);
+      if (tab.pinned) gBrowser.unpinTab(tab);
+      else gBrowser.pinTab(tab);
     } catch (e) {
-      console.error("Dia Tab Hover: bookmark failed", e);
+      console.error("Dia Tab Hover: pin failed", e);
     }
+    hide();
   }
 
   function splitWith(tab) {
